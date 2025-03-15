@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "*.hs": "haskell"
-    }
+    },
+    "haskell.serverExecutablePath": "~/.ghcup/bin/hls"
 }
