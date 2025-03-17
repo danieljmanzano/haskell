@@ -15,7 +15,7 @@ main = do
 ehTriangulo :: Double -> Double -> Double -> Bool
 ehTriangulo a b c 
   | a < 0 || b < 0 || c < 0 = False -- se houver algum lado negativo, não pode ser triângulo
-  | (a + b > c) && (a + c > b) && (b + c > a) = True -- se essa condição for verdadeira, os tamanhos dos lados possibilitam que seja um triângulo
+  | (a + b >= c) && (a + c >= b) && (b + c >= a) = True -- se essa condição for verdadeira, os tamanhos dos lados possibilitam que seja um triângulo
   | otherwise = False -- senão, não é triângulo
 
 heron :: Double -> Double -> Double -> Maybe Double
