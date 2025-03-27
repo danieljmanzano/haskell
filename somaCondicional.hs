@@ -18,8 +18,8 @@ a = [1, -2, 7, 8, 10, 0, -4, -3, 19] -- lista aleatória. não sei receber na ma
 -- primeira solução para implementar somas condicionais. não muito boa
 ehPositivo x = x > 0
 ehNegativo x = x < 0
-ehPar x = mod x 2 == 0
-ehImpar x = mod x 2 == 1
+ehPar x = mod x 2 == 0 -- obs. legal: se fizer 'x `mod` 2' dá no mesmo. colocar uma função prefixa entre crases torna ela infixa
+ehImpar x = mod x 2 == 1 
 
 somaSe _ [] = 0 -- função para somar números de acordo com alguma condição que passo
 somaSe cond (x:xs) -- no cond será passada alguma das funções de verificação de cima, aí decido o que quero somar
@@ -27,18 +27,19 @@ somaSe cond (x:xs) -- no cond será passada alguma das funções de verificaçã
   | otherwise = somaSe cond xs
 
 
-
--- daqui pra baixo é o que o professor diz que é mais legal (e ainda assim não o ideal)
+-- daqui pra baixo ta melhor
+filtra :: (a -> Bool) -> [a] -> [a]
 filtra _ [] = [] -- filtro uma lista de acordo com o que coloco no teste. devolve a lista filtrada
 filtra teste (x:xs)
-  | teste x = x:r
+  | teste x = x : r
   | otherwise = r
   where
     r = filtra teste xs
 
+soma :: (Num a) => [a] -> a -- definição: 'a' tem que ser um tipo "somável", então colocamos esse 'Num a' antes
 soma [] = 0 -- por fim, uma soma genérica
 soma (x:xs) = x + soma xs
 
 
 -- código que fui fazendo durante a aula (pegando coisa do código do professor também)
--- a ideia principal era entender como "melhorar" implementações usando esse problema como exemplo
+-- a ideia principal era entender como "melhorar" implementações usando esses problemas como exemplos
