@@ -20,16 +20,5 @@ qs (x:xs) = menores ++ iguais ++ maiores -- o quicksort da lista é basicamente 
   iguais = x : filtra (==x) xs -- os iguais são "mantidos" no lugar após o x
   maiores = qs $ filtra (>x) xs -- os maiores são ordenados também com o filtra de maiores que x
 
-
--- aqui embaixo o projeto de um quicksort com o pivo "variavel" (o pegaPivo conseguiria escolher minha estrategia desejada para o pivo)
--- ainda nao deve funcionar, talvez eu mexa aqui depois
--- qs2 _ [] = [] 
--- qs2 pegaPivo l = menores ++ iguais ++ maiores 
---  where
---   pivo = pegaPivo l
---   menores = qs2 $ filtra (<x) xs 
---   iguais = x:filtra (==x) xs
---   maiores = qs2 $ filtra (>x) xs
-
-
 -- implementando o quicksort eeeita lasquera
+-- feito em sala
