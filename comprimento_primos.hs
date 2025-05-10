@@ -1,9 +1,9 @@
 -- devo receber dois números ('a' e 'b') e calcular o maior "comprimento" entre dois primos consecutivos que estejam dentro da faixa [a..b]
 -- pra fazer isso, eu:
--- pego duas listas de primos (uma com [a..b] e outra [a'..b], em que a' é o primo imediatamente maior que a),
--- faço uma lista de tuplas entre essas duas listas de primos,
--- pego as diferenças entre os valores das tuplas
--- e, por fim, pego o maior valor da lista de diferenças
+--   pego duas listas de primos (uma com [a..b] e outra [a'..b], em que a' é o primo imediatamente maior que a),
+--   faço uma lista de tuplas entre essas duas listas de primos,
+--   pego as diferenças entre os valores das tuplas
+--   e, por fim, pego o maior valor da lista de diferenças
 
 main = do
     la <- getLine
