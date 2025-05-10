@@ -19,6 +19,7 @@ data Frame = Strike -- strike: só 1 lançamento de 10 pontos
   deriving (Show)
 
 {-
+------ FUNÇÃO ANTIGA, TO MEXENDO EM UMA NOVA ENTAO NAO USAR ESSA (DEIXEI SÓ DE GARANTIA) ------
 calcularPontuacao :: [Int] -> Int
 calcularPontuacao jogadas = calcular jogadas 1
   where
@@ -45,28 +46,36 @@ calcularPontuacao jogadas = calcular jogadas 1
 -}
 
 calcularPontuacao :: [Frame] -> Int
+-- calcula a pontuação com base na lista de frames
+-- entra uma lista de frames, retorna o resultado em int
 calcularPontuacao frames = soma frames
   where
-    soma [] = 0
-    soma (Strike:rest) = 10 + bonus rest 2 + soma rest
-    soma (Spare _ _:rest) = 10 + bonus rest 1 + soma rest
-    soma (Open a b:rest) = a + b + soma rest
-    soma [Final a b (Just c)] = a + b + c
-    soma [Final a b Nothing] = a + b
+    -- soma: função auxiliar que calcula a soma total dos frames
+    -- entra uma lista de frames, retorna o resultado em int
+    soma :: [Frame] -> Int
+    soma [] = 0 -- caso base. lista vazia retorna 0
+    soma (Strike:rest) = 10 + bonus rest 2 + soma rest -- = 10 (strike) + 2 lançamentos seguintes + restante da lista
+    soma (Spare _ _:rest) = 10 + bonus rest 1 + soma rest -- = 10 (spare) + 1 lançamento seguinte + restante da lista
+    soma (Open a b:rest) = a + b + soma rest -- = dois lançamentos atuais + restante da lista
+    soma [Final a b (Just c)] = a + b + c -- 10º frame com 3 lançamentos
+    soma [Final a b Nothing] = a + b -- 10º frame com 2 lançamentos
     soma _ = 0  -- fallback
 
+    -- bônus: função auxiliar que calcula o bônus de acordo com o frame
+    -- entra uma lista de frames e um int (número de lançamentos a serem considerados para o bônus), retorna o resultado em int
     bonus :: [Frame] -> Int -> Int
-    bonus _ 0 = 0
-    bonus [] _ = 0
-    bonus (Strike:xs) n = 10 + bonus xs (n - 1)
-    bonus (Spare a b:xs) n = a + b + bonus xs (n - 2)
-    bonus (Open a b:xs) n = a + b + bonus xs (n - 2)
-    bonus (Final a b (Just c):_) n = takeN n [a, b, c]
-    bonus (Final a b Nothing:_) n = takeN n [a, b]
+    bonus _ 0 = 0 -- caso base. se não houver lançamentos a serem considerados, retorna 0
+    bonus [] _ = 0 -- caso base. se não houver mais frames, retorna 0
+    bonus (Strike:xs) n = 10 + bonus xs (n - 1) -- strike conta como um lançamento, por isso n - 1
+    bonus (Spare a b:xs) n = a + b + bonus xs (n - 2) -- spare conta como dois lançamentos, por isso n - 2
+    bonus (Open a b:xs) n = a + b + bonus xs (n - 2) -- open frame conta como dois lançamentos, por isso n - 2
+    bonus (Final a b (Just c):_) n = takeN n [a, b, c] -- 10º frame com 3 lançamentos
+    bonus (Final a b Nothing:_) n = takeN n [a, b] -- 10º frame com 2 lançamentos
 
-    takeN n xs = sum (take n xs)
+    takeN n xs = sum (take n xs) -- soma os n primeiros elementos da lista xs
 
 
+-- adapta a lista de lançamentos para uma lista de frames que vão ser usados para avaliar as jogadas mais corretamente
 extrairFrames :: [Int] -> [Frame]
 extrairFrames jogadas = extrair jogadas 1
   where
