@@ -1,6 +1,3 @@
--- feito por Daniel
-{- o programa simula um jogo de boliche, processando uma lista de lançamentos 
-e calculando a pontuação de acordo com as regras oficiais -}
 import Data.Maybe (listToMaybe)
 
 main :: IO ()
@@ -32,15 +29,9 @@ calcularPontuacao frames = sum $ scoreFrames frames
     scoreFrames [] = [] -- caso base: lista vazia retorna lista vazia
     scoreFrames [Final a b (Just c)] = [a + b + c] -- caso do 10º frame com 3 lançamentos
     scoreFrames [Final a b Nothing] = [a + b] -- caso do 10º frame com 2 lançamentos
-    
-    -- Strike: 10 pontos + bônus dos dois próximos lançamentos
-    scoreFrames (Strike:xs) = (10 + strikeBonus xs) : scoreFrames xs
-    
-    -- Spare: 10 pontos + bônus do próximo lançamento
-    scoreFrames (Spare _ _:xs) = (10 + spareBonus xs) : scoreFrames xs
-    
-    -- Open: simplesmente soma dos dois valores
-    scoreFrames (Open a b:xs) = (a + b) : scoreFrames xs
+    scoreFrames (Strike:xs) = (10 + strikeBonus xs) : scoreFrames xs -- Strike: 10 pontos + bônus dos dois próximos lançamentos
+    scoreFrames (Spare _ _:xs) = (10 + spareBonus xs) : scoreFrames xs -- Spare: 10 pontos + bônus do próximo lançamento
+    scoreFrames (Open a b:xs) = (a + b) : scoreFrames xs -- Open: simplesmente soma dos dois valores
     
     -- strikeBonus: calcula o bônus específico para um Strike (os próximos dois lançamentos)
     -- entra uma lista de frames (os frames após o strike), retorna o valor do bônus
@@ -93,8 +84,9 @@ extrairFrames jogadas = extrair jogadas 1
     extrair (a:b:xs) n
       | n < 10 && a + b == 10 = Spare a b : extrair xs (n + 1) -- caso de spare
       | n < 10 = Open a b : extrair xs (n + 1) -- caso de open frame
-      | n == 10 = [Final a b (if a + b >= 10 then listToMaybe xs else Nothing)] -- 10º frame: 3ª jogada só é permitida se houver spare ou strike
-    
+      | n == 10 = [Final a b (listToMaybe xs)] -- 10º frame: 3ª jogada só é permitida se houver spare ou strike
+    -- obs.: listToMaybe xs retorna o primeiro elemento da lista xs caso exista ou Nothing se xs estiver vazia
+
     extrair _ _ = [] -- caso de erro ou lista insuficiente
     
     -- extrairFinal10: função auxiliar específica para processar o 10º frame
