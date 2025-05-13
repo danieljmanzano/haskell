@@ -1,4 +1,10 @@
--- feito por Daniel
+{-------------------------------------------------
+feito por:
+    Daniel Jorge Manzano, n°USP: 15446861
+    Heitor Gomes de Oliveira, n°USP: 15458350
+    Newton Eduardo Pena Villegas, n°USP: 15481732
+
+-------------------------------------------------}
 
 main :: IO ()
 main = do
@@ -13,19 +19,56 @@ main = do
     putStr $ formatar frames -- formata os frames para impressão
     putStr " | " -- imprime um espaço em branco
     print $ calcularPontuacao frames -- calcula a pontuação e imprime o resultado
-    -- let resultado = calcularPontuacao frames -- calcula a pontuação com base nos frames
-    -- print resultado -- imprime o resultado
+
 
 -- um Frame pode ser:
 data Frame = Strike -- strike: só 1 lançamento de 10 pontos
   | Spare Int Int -- spare: dois lançamentos que somam 10
   | Open Int Int -- open: dois lançamentos que não somam 10
   | Final Int Int (Maybe Int) -- 10º frame com 2 ou 3 jogadas
-  deriving (Show)
 
 
+
+{------ FUNÇÕES PARA OS CÁLCULOS DOS PONTOS -------}
+
+-- função originalmente do "Data.Maybe", usada como auxiliar mais pra frente. implementado aqui para deixar visível como funciona
+listToMaybe :: [a] -> Maybe a
+listToMaybe [] = Nothing -- caso a lista esteja vazia, retorna Nothing
+listToMaybe (x:_) = Just x -- caso a lista tenha pelo menos um elemento, retorna o primeiro elemento
+
+-- função que adapta a lista de lançamentos para uma lista de frames que vão ser usados para avaliar as jogadas mais corretamente
+extrairFrames :: [Int] -> [Frame]
+extrairFrames jogadas = extrair jogadas 1
+  where
+    -- caso base: depois do 10º frame, ignora o resto
+    extrair _ 11 = []  
+    
+    -- caso em que a jogada (na cabeça da lista) foi um strike
+    extrair (10:xs) n
+      | n < 10 = Strike : extrair xs (n + 1) -- se não for o 10º frame, continua normalmente
+      | n == 10 = -- tratamento especial para strike no 10º frame
+        let (finalFrame, _) = extrairFinal10 (10:xs) -- usa a função auxiliar para extrair o 10º frame
+        in [finalFrame]
+    
+    -- tratando jogadas normais (dois lançamentos por vez)
+    extrair (a:b:xs) n
+      | n < 10 && a + b == 10 = Spare a b : extrair xs (n + 1) -- caso de spare
+      | n < 10 = Open a b : extrair xs (n + 1) -- caso de open frame
+      | n == 10 = [Final a b (listToMaybe xs)] -- 10º frame: 3ª jogada só é permitida se houver spare ou strike
+
+    extrair _ _ = [] -- caso de erro ou lista insuficiente
+    
+    -- extrairFinal10: função auxiliar específica para processar o 10º frame
+    -- recebe a lista de jogadas começando do 10º frame e retorna o frame final e as jogadas restantes
+    extrairFinal10 :: [Int] -> (Frame, [Int])
+    extrairFinal10 (10:b:c:xs) = (Final 10 b (Just c), xs) -- strike no 10º frame: tem direito a mais duas jogadas
+    extrairFinal10 (10:b:xs) = (Final 10 b Nothing, xs) -- strike no 10º frame mas só fez mais uma jogada
+    extrairFinal10 (a:b:c:xs) | a + b == 10 = (Final a b (Just c), xs) -- spare no 10º frame: tem direito a mais uma jogada
+    extrairFinal10 (a:b:xs) = (Final a b Nothing, xs) -- jogada normal no 10º frame: só duas jogadas
+    extrairFinal10 xs = (Final 0 0 Nothing, xs) -- caso de erro (lista insuficiente)
+
+-- função "principal" que calcula a pontuação total do jogo a partir de uma lista com os frames do jogo
 calcularPontuacao :: [Frame] -> Int
--- calcula a pontuação total do jogo com base na lista de frames
 calcularPontuacao frames = sum $ scoreFrames frames
   where
     -- scoreFrames: calcula a pontuação de cada frame e retorna uma lista de pontuações
@@ -58,7 +101,6 @@ calcularPontuacao frames = sum $ scoreFrames frames
     spareBonus (Spare a _:_) = a -- se o próximo for spare, o bônus é o primeiro lançamento do spare
     spareBonus (Open a _:_) = a -- se o próximo for open, o bônus é o primeiro lançamento
     
-
     -- lancamento1: função auxiliar para obter o valor do primeiro lançamento de um frame
     -- usada para calcular bônus em casos complexos (ex: strike seguido de strike)
     -- entra uma lista de frames, retorna o valor do primeiro lançamento
@@ -69,6 +111,10 @@ calcularPontuacao frames = sum $ scoreFrames frames
     lancamento1 (Spare a _:_) = a -- caso de spare: retorna o primeiro lançamento
     lancamento1 (Open a _:_) = a -- caso de open: retorna o primeiro lançamento
 
+
+
+{------ FUNÇÕES PARA O PRINT DOS RESULTADOS -------}
+
 formatar :: [Frame] -> String                                      -- Função que formata uma lista de frames em uma string
 formatar [] = ""                                                   -- Caso base: lista vazia, retorna string vazia
 formatar (Strike:rest) = "X _ | " ++ formatar rest                 -- Strike: exibe "X _" e continua formatando o resto
@@ -76,7 +122,7 @@ formatar (Spare a b:rest) = show a ++ " / | " ++ formatar rest     -- Spare: exi
 formatar (Open a b:rest) = show a ++ " " ++ show b ++ " | " ++ formatar rest  -- Frame aberto: exibe os dois valores
 
 formatar [Final a b (Just c)]                                      -- Último frame com terceiro lançamento
-  | a == 10 && b == 10 && c == 10 = "X X X"                         -- Três strikes no final
+  | a == 10 && b == 10 && c == 10 = "X X X"                        -- Três strikes no final
   | a == 10 && b == 10            = "X X " ++ mostrarLancamento c  -- Dois strikes e um terceiro lançamento
   | a == 10 && b + c == 10 && b /= 10 = "X " ++ mostrarLancamento b ++ " /"  -- Strike seguido de spare (sem segundo strike)
   | a == 10                       = "X " ++ mostrarLancamento b ++ " " ++ mostrarLancamento c  -- Strike seguido de dois lançamentos comuns
@@ -84,60 +130,12 @@ formatar [Final a b (Just c)]                                      -- Último fr
   | otherwise                     = show a ++ " " ++ show b ++ " " ++ mostrarLancamento c      -- Nenhum strike/spare: mostra os três valores
 
 formatar [Final a b Nothing]                                       -- Último frame com apenas dois lançamentos
-  | a == 10 && b == 10 = "X X"                                      -- Dois strikes
+  | a == 10 && b == 10 = "X X"                                     -- Dois strikes
   | a == 10            = "X " ++ mostrarLancamento b               -- Um strike seguido de um lançamento comum
-  | a + b == 10        = show a ++ " /"                             -- Spare
+  | a + b == 10        = show a ++ " /"                            -- Spare
   | otherwise          = show a ++ " " ++ show b                   -- Dois lançamentos comuns
 
 -- Função auxiliar para mostrar lançamentos com símbolo X quando for 10
 mostrarLancamento :: Int -> String
 mostrarLancamento 10 = "X"
 mostrarLancamento n  = show n
-
-extrairFrames :: [Int] -> [Frame]
-extrairFrames jogadas = extrair jogadas 1
-  where
-    -- extrair: função auxiliar recursiva que processa a lista de jogadas
-    -- recebe a lista de jogadas restantes e o número do frame atual
-    -- retorna uma lista de Frames processados
-    
-    -- caso base: depois do 10º frame, ignora o resto
-    extrair _ 11 = []  
-    
-    -- caso em que a jogada (na cabeça da lista) foi um strike
-    extrair (10:xs) n
-      | n < 10 = Strike : extrair xs (n + 1) -- se não for o 10º frame, continua normalmente
-      | n == 10 = -- tratamento especial para strike no 10º frame
-          case xs of
-            (b:c:_) -> [Final 10 b (Just c)] -- se houver mais jogadas, processa o 10º frame
-            (b:_)  -> [Final 10 b Nothing] -- se houver apenas uma jogada, processa o 10º frame
-            _      -> [Final 10 0 Nothing] -- se não houver mais jogadas, processa o 10º frame com 0 pontos
-          -- let (finalFrame, _) = extrairFinal10 (10:xs) -- usa a função auxiliar para extrair o 10º frame
-          -- in [finalFrame]
-    
-    -- tratando jogadas normais (dois lançamentos por vez)
-    extrair (a:b:xs) n
-      | n < 10 && a + b == 10 = Spare a b : extrair xs (n + 1) -- caso de spare
-      | n < 10 = Open a b : extrair xs (n + 1) -- caso de open frame
-      | n == 10 = 
-        case xs of
-          (c:_) | a + b == 10 -> [Final a b (Just c)] -- caso de spare no 10º frame
-          _ -> [Final a b Nothing] -- caso de open frame no 10º frame
-        -- [Final a b (listToMaybe xs)] -- 10º frame: 3ª jogada só é permitida se houver spare ou strike
-    -- obs.: listToMaybe xs retorna o primeiro elemento da lista xs caso exista ou Nothing se xs estiver vazia
-
-    extrair _ _ = [] -- caso de erro ou lista insuficiente
-    
-    -- extrairFinal10: função auxiliar específica para processar o 10º frame
-    -- recebe a lista de jogadas começando do 10º frame e retorna o frame final e as jogadas restantes
-    extrairFinal10 :: [Int] -> (Frame, [Int])
-    extrairFinal10 (10:b:c:xs) = (Final 10 b (Just c), xs) -- strike no 10º frame: tem direito a mais duas jogadas
-    extrairFinal10 (10:b:xs) = (Final 10 b Nothing, xs) -- strike no 10º frame mas só fez mais uma jogada
-    extrairFinal10 (a:b:c:xs) | a + b == 10 = (Final a b (Just c), xs) -- spare no 10º frame: tem direito a mais uma jogada
-    extrairFinal10 (a:b:xs) = (Final a b Nothing, xs) -- jogada normal no 10º frame: só duas jogadas
-    extrairFinal10 xs = (Final 0 0 Nothing, xs) -- caso de erro (lista insuficiente)
-
-listToMaybe :: [a] -> Maybe a
-listToMaybe [] = Nothing -- caso a lista esteja vazia, retorna Nothing
-listToMaybe (x:_) = Just x -- caso a lista tenha pelo menos um elemento, retorna o primeiro elemento
--- caso a lista tenha mais de um elemento, retorna o primeiro elemento
