@@ -73,26 +73,24 @@ calcularPontuacao frames = sum $ scoreFrames frames
   where
     -- scoreFrames: calcula a pontuação de cada frame e retorna uma lista de pontuações
     -- para cada frame, calcula a pontuação base + o bônus correspondente
-    -- entra uma lista de frames, retorna uma lista de pontuações de cada frame
     scoreFrames :: [Frame] -> [Int]
     scoreFrames [] = [] -- caso base: lista vazia retorna lista vazia
     scoreFrames [Final a b (Just c)] = [a + b + c] -- caso do 10º frame com 3 lançamentos
     scoreFrames [Final a b Nothing] = [a + b] -- caso do 10º frame com 2 lançamentos
-    scoreFrames (Strike:xs) = (10 + strikeBonus xs) : scoreFrames xs -- Strike: 10 pontos + bônus dos dois próximos lançamentos
-    scoreFrames (Spare _ _:xs) = (10 + spareBonus xs) : scoreFrames xs -- Spare: 10 pontos + bônus do próximo lançamento
-    scoreFrames (Open a b:xs) = (a + b) : scoreFrames xs -- Open: simplesmente soma dos dois valores
+    scoreFrames (Strike:xs) = (10 + strikeBonus xs) : scoreFrames xs -- strike: 10 pontos + bônus dos dois próximos lançamentos
+    scoreFrames (Spare _ _:xs) = (10 + spareBonus xs) : scoreFrames xs -- spare: 10 pontos + bônus do próximo lançamento
+    scoreFrames (Open a b:xs) = (a + b) : scoreFrames xs -- open: simplesmente, soma dos dois valores
     
-    -- strikeBonus: calcula o bônus específico para um Strike (os próximos dois lançamentos)
+    -- strikeBonus: calcula o bônus específico para um strike (os próximos dois lançamentos)
     -- entra uma lista de frames (os frames após o strike), retorna o valor do bônus
     strikeBonus :: [Frame] -> Int
     strikeBonus [] = 0 -- não há frames após, então não há bônus
-    strikeBonus (Final a b (Just c):_) = a + b -- se o próximo é o frame final, o bônus é a soma dos dois primeiros lançamentos
-    strikeBonus (Final a b Nothing:_) = a + b -- se o próximo é o frame final, o bônus é a soma dos dois lançamentos
-    strikeBonus (Strike:xs) = 10 + lancamento1 xs -- se o próximo também for Strike, é 10 + o primeiro lançamento do frame seguinte
-    strikeBonus (Spare a _:_) = 10 -- se o próximo for Spare, somamos os 10 pontos do spare como bônus
-    strikeBonus (Open a b:_) = a + b -- se o próximo for Open, o bônus é a soma dos dois lançamentos
+    strikeBonus (Final a b _:_) = a + b -- se o próximo é o frame final, o bônus é a soma dos dois primeiros lançamentos
+    strikeBonus (Strike:xs) = 10 + lancamento1 xs -- se o próximo também for strike, é 10 + o primeiro lançamento do frame seguinte
+    strikeBonus (Spare a _:_) = 10 -- se o próximo for spare, soma os 10 pontos do spare como bônus
+    strikeBonus (Open a b:_) = a + b -- se o próximo for open, o bônus é a soma dos dois lançamentos
     
-    -- spareBonus: calcula o bônus específico para um Spare (o próximo lançamento)
+    -- spareBonus: calcula o bônus específico para um spare (o próximo lançamento)
     -- entra uma lista de frames (os frames após o spare), retorna o valor do bônus
     spareBonus :: [Frame] -> Int
     spareBonus [] = 0 -- não há frames após, então não há bônus
