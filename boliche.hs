@@ -6,6 +6,9 @@ feito por:
 
 -------------------------------------------------}
 
+-- trabalho de funcional para simular um jogo de boliche, basicamente
+-- boliche é muito difícil, dá seus pulo pra entender (porque o código realmente funciona, o problema mesmo é o boliche)
+
 main :: IO ()
 main = do
     -- getContents faz a leitura até o fim da entrada
